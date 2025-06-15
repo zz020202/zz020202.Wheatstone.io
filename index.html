@@ -111,7 +111,7 @@
         }
 
         th, td {
-            padding:10px 2px;
+            padding: 10px 2px;
             text-align: center;
             border: 1px solid #bbdefb;
         }
@@ -292,7 +292,6 @@
             }
         }
     </style>
-    <!-- 引入Chart.js库 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -336,7 +335,7 @@
                             <th>R₃/Ω</th>
                             <th>ΔR₃/Ω</th>
                             <th>n/格</th>
-                            <th>S₁/(格·1%)</th>
+                            <th>𝑆₁(格/1%)</th>
 
                             <!-- 换臂后 -->
                             <th>桥臂比</th>
@@ -345,12 +344,12 @@
                             <th>R₃'/Ω</th>
                             <th>ΔR₃/Ω</th>
                             <th>n/格</th>
-                            <th>S₂/(格·1%)</th>
+                            <th>𝑆₂(格/1%)</th>
 
                             <!-- 计算结果 -->
                             <th>Rₓ/Ω</th>
-                            <th>S</th>
-                            <th>Rₓ=Rₓ+ΔRₓ/Ω</th>
+                            <th>𝑆</th>
+                            <th>Rₓ=Rₓ±ΔRₓ/Ω</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -507,11 +506,15 @@
 
             <div class="formula-box">
                 <h3>计算公式</h3>
-                <p class="formula">S₁ = n' / (ΔR₃' / R₃')</p>
-                <p class="formula">S₂ = n'' / (ΔR₃'' / R₃'')</p>
+                <p class="formula">𝑆₁ = n' / (ΔR₃' / R₃')</p>
+                <p class="formula">𝑆₂ = n'' / (ΔR₃'' / R₃'')</p>
                 <p class="formula">Rₓ = √(R₃ × R₃')</p>
-                <p class="formula">S = √(S₁ × S₂)</p>
-                <p class="formula">Rₓ+ΔRₓ = Rₓ × (1 + 1/S)</p>
+                <p class="formula">𝑆 = √(𝑆₁ × 𝑆₂)</p>
+                <p class="formula">ΔRₓ' = (0.2/𝑆)/Rₓ×0.01</p>
+                <p class="formula">E_R = √[E_R(前) × E_R(后)]</p>
+                <p class="formula">ΔRₓ" = E_R × Rₓ</p>
+                <p class="formula">ΔRₓ = √(ΔRₓ'² + ΔRₓ"²)</p>
+                <p class="formula">Rₓ=Rₓ±ΔRₓ/Ω</p>
             </div>
         </div>
 
@@ -523,7 +526,8 @@
                 <li>在表格中输入换臂前后的测量数据</li>
                 <li>计算结果将自动显示在右侧列中</li>
                 <li>换臂前后的桥臂比自动设置为倒数关系</li>
-                <li>S值采用几何平均数计算：S = √(S₁ × S₂)</li>
+                <li>S值采用几何平均数计算：𝑆 = √(𝑆₁ × 𝑆₂)</li>
+                <li>ΔRₓ综合了检流计(Δn=0.2)和电阻箱各档位误差</li>
                 <li>S灵敏度可视化图表将根据输入数据自动更新</li>
                 <li>点击"重置表格数据"按钮可以清空所有输入数据</li>
             </ol>
@@ -539,7 +543,7 @@
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'S灵敏度 (格·1%)',
+                        label: '𝑆灵敏度 (格/1%)',
                         data: [],
                         backgroundColor: 'rgba(66, 165, 245, 0.2)',
                         borderColor: 'rgba(66, 165, 245, 1)',
@@ -557,7 +561,7 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: '不同桥臂比下的S灵敏度变化',
+                            text: '不同桥臂比下的𝑆灵敏度变化',
                             font: {
                                 size: 16,
                                 color: '#1565c0'
@@ -577,7 +581,7 @@
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'S灵敏度 (格·1%)',
+                                text: '𝑆灵敏度 (格/1%)',
                                 color: '#1565c0'
                             },
                             grid: {
@@ -625,6 +629,132 @@
                 sensitivityChart.update();
             }
 
+            // 计算电阻箱误差E_R
+            function calculateResistorError(r) {
+                if (!r || r === 0) return 0;
+                
+                const digits = [
+                    Math.floor(r / 1000) * 1000,
+                    Math.floor((r % 1000) / 100) * 100,
+                    Math.floor((r % 100) / 10) * 10,
+                    Math.floor(r % 10),
+                    Math.round((r % 1) * 10) / 10,
+                    Math.round((r % 0.1) * 100) / 100
+                ];
+                
+                const errors = [0.02, 0.02, 0.05, 0.2, 2, 5]; // 各档位误差百分比
+                let deltaR = 0;
+                
+                digits.forEach((digit, index) => {
+                    if (digit > 0) {
+                        deltaR += parseFloat((digit * (errors[index] / 100)).toFixed(8));
+                    }
+                });
+                
+                return parseFloat((deltaR / r).toFixed(8)); // 返回相对误差
+            }
+
+            // 计算单行数据
+            function calculateRow(row) {
+                // 换臂前的输入值
+                const r1Before = parseFloat(row.querySelector('.r1-before').value) || 0;
+                const r2Before = parseFloat(row.querySelector('.r2-before').value) || 0;
+                const r3Before = parseFloat(row.querySelector('.r3-before').value) || 0;
+                const deltaR3Before = parseFloat(row.querySelector('.delta-r3-before').value) || 0;
+                const nBefore = parseFloat(row.querySelector('.n-before').value) || 0;
+                
+                // 换臂后的输入值
+                const r1After = parseFloat(row.querySelector('.r1-after').value) || 0;
+                const r2After = parseFloat(row.querySelector('.r2-after').value) || 0;
+                const r3After = parseFloat(row.querySelector('.r3-after').value) || 0;
+                const deltaR3After = parseFloat(row.querySelector('.delta-r3-after').value) || 0;
+                const nAfter = parseFloat(row.querySelector('.n-after').value) || 0;
+                
+                // 结果单元格
+                const s1Cell = row.querySelector('.s1');
+                const s2Cell = row.querySelector('.s2');
+                const rxCell = row.querySelector('.rx');
+                const sCell = row.querySelector('.s');
+                const rxFinalCell = row.querySelector('.rx-final');
+
+                // 计算𝑆₁
+                if (r3Before && deltaR3Before && nBefore && deltaR3Before !== 0) {
+                    const s1 = parseFloat((nBefore / (deltaR3Before / r3Before)).toFixed(8));
+                    s1Cell.textContent = formatNumber(s1);
+                } else {
+                    s1Cell.textContent = '';
+                }
+
+                // 计算𝑆₂
+                if (r3After && deltaR3After && nAfter && deltaR3After !== 0) {
+                    const s2 = parseFloat((nAfter / (deltaR3After / r3After)).toFixed(8));
+                    s2Cell.textContent = formatNumber(s2);
+                } else {
+                    s2Cell.textContent = '';
+                }
+
+                // 计算Rx和综合误差
+                if (r3Before && r3After) {
+                    const rx = parseFloat(Math.sqrt(r3Before * r3After).toFixed(8));
+                    rxCell.textContent = formatNumber(rx);
+                    
+                    const s1 = parseFloat(s1Cell.textContent) || 0;
+                    const s2 = parseFloat(s2Cell.textContent) || 0;
+                    
+                    if (s1 && s2) {
+                        const s = parseFloat(Math.sqrt(s1 * s2).toFixed(8));
+                        sCell.textContent = formatNumber(s);
+                        
+                        if (s1 !== 0 && s2 !== 0 && rx) {
+                            // 1. 计算ΔRₓ' = (0.2/𝑆)/Rₓ*0.01
+                            const deltaRxPrime = parseFloat(((0.2 / s) / rx * 0.01).toFixed(8));
+                            
+                            // 2. 计算换臂前的E_R
+                            const E1_before = parseFloat(calculateResistorError(r1Before).toFixed(8));
+                            const E2_before = parseFloat(calculateResistorError(r2Before).toFixed(8));
+                            const E3_before = parseFloat(calculateResistorError(r3Before).toFixed(8));
+                            const E_R_before = parseFloat(Math.sqrt(
+                                Math.pow(E1_before, 2) + 
+                                Math.pow(E2_before, 2) + 
+                                Math.pow(E3_before, 2)
+                            ).toFixed(8));
+                            
+                            // 3. 计算换臂后的E_R
+                            const E1_after = parseFloat(calculateResistorError(r1After).toFixed(8));
+                            const E2_after = parseFloat(calculateResistorError(r2After).toFixed(8));
+                            const E3_after = parseFloat(calculateResistorError(r3After).toFixed(8));
+                            const E_R_after = parseFloat(Math.sqrt(
+                                Math.pow(E1_after, 2) + 
+                                Math.pow(E2_after, 2) + 
+                                Math.pow(E3_after, 2)
+                            ).toFixed(8));
+                            
+                            // 4. 综合得到ER= √[E_R（前） *E_R（后）]
+                            const ER = parseFloat(Math.sqrt(E_R_before * E_R_after).toFixed(8));
+                            
+                            // 5. 计算ΔRₓ''=ER*Rₓ
+                            const deltaRxDoublePrime = parseFloat((ER * rx).toFixed(8));
+                            
+                            // 6. 最终不确定度：ΔRₓ = √[ΔRₓ'² + ΔRₓ''²]
+                            const deltaRxTotal = parseFloat(Math.sqrt(
+                                Math.pow(deltaRxPrime, 2) + 
+                                Math.pow(deltaRxDoublePrime, 2)
+                            ).toFixed(8));
+                            
+                            rxFinalCell.textContent = `${formatNumber(rx)}±${formatNumber(deltaRxTotal)}`;
+                        }
+                    }
+                }
+                
+                updateChart();
+            }
+
+            // 格式化数字，显示时保留两位小数
+            function formatNumber(num) {
+                if (isNaN(num)) return '';
+                return parseFloat(num).toFixed(2);
+            }
+
             // 全局R1输入框
             const globalR1Input = document.getElementById('global-r1');
 
@@ -644,14 +774,14 @@
                     const ratioCell = row.querySelector('.ratio-cell');
                     const ratioText = ratioCell.textContent.trim();
 
-                    // 设置R1-before值（不强制保留小数位）
+                    // 设置R1-before值
                     r1Before.value = globalR1Value;
 
                     // 根据桥臂比计算R2-before
                     if (ratioText.includes(':')) {
                         const [left, right] = ratioText.split(':').map(Number);
                         const ratio = left / right;
-                        const r2Value = globalR1Value / ratio;
+                        const r2Value = parseFloat((globalR1Value / ratio).toFixed(8));
                         r2Before.value = r2Value;
 
                         // 自动填充换臂后的R₁和R₂（交换值）
@@ -680,14 +810,14 @@
                 r1Before.addEventListener('input', function() {
                     const r1After = row.querySelector('.r1-after');
                     const r2After = row.querySelector('.r2-after');
-                    r2After.value = r1Before.value;
+                    r2After.value = parseFloat(r1Before.value).toFixed(8);
                     calculateRow(row);
                 });
 
                 r2Before.addEventListener('input', function() {
                     const r1After = row.querySelector('.r1-after');
                     const r2After = row.querySelector('.r2-after');
-                    r1After.value = r2Before.value;
+                    r1After.value = parseFloat(r2Before.value).toFixed(8);
                     calculateRow(row);
                 });
 
@@ -699,94 +829,6 @@
                     });
                 });
             });
-
-            // 格式化数字，保留两位小数
-            function formatNumber(num) {
-                if (isNaN(num)) return '';
-                return num.toFixed(2);
-            }
-
-            // 计算单行数据
-            function calculateRow(row) {
-                // 换臂前的输入框
-                const r3Before = row.querySelector('.r3-before');
-                const deltaR3Before = row.querySelector('.delta-r3-before');
-                const nBefore = row.querySelector('.n-before');
-                const s1Cell = row.querySelector('.s1');
-
-                // 换臂后的输入框
-                const r3After = row.querySelector('.r3-after');
-                const deltaR3After = row.querySelector('.delta-r3-after');
-                const nAfter = row.querySelector('.n-after');
-                const s2Cell = row.querySelector('.s2');
-
-                // 结果单元格
-                const rxCell = row.querySelector('.rx');
-                const sCell = row.querySelector('.s');
-                const rxFinalCell = row.querySelector('.rx-final');
-
-                // 计算S1
-                if (r3Before.value && deltaR3Before.value && nBefore.value) {
-                    const r3 = parseFloat(r3Before.value);
-                    const deltaR3 = parseFloat(deltaR3Before.value);
-                    const n = parseFloat(nBefore.value);
-
-                    if (deltaR3 !== 0) {
-                        const s1 = n / (deltaR3 / r3);
-                        s1Cell.textContent = formatNumber(s1);
-                    }
-                } else {
-                    s1Cell.textContent = '';
-                }
-
-                // 计算S2
-                if (r3After.value && deltaR3After.value && nAfter.value) {
-                    const r3 = parseFloat(r3After.value);
-                    const deltaR3 = parseFloat(deltaR3After.value);
-                    const n = parseFloat(nAfter.value);
-
-                    if (deltaR3 !== 0) {
-                        const s2 = n / (deltaR3 / r3);
-                        s2Cell.textContent = formatNumber(s2);
-                    }
-                } else {
-                    s2Cell.textContent = '';
-                }
-
-                // 计算Rx
-                if (r3Before.value && r3After.value) {
-                    const r3BeforeVal = parseFloat(r3Before.value);
-                    const r3AfterVal = parseFloat(r3After.value);
-                    const rx = Math.sqrt(r3BeforeVal * r3AfterVal);
-                    rxCell.textContent = formatNumber(rx);
-
-                    // 计算S和Rx+ΔRx
-                    const s1Text = s1Cell.textContent;
-                    const s2Text = s2Cell.textContent;
-
-                    if (s1Text && s2Text) {
-                        const s1 = parseFloat(s1Text);
-                        const s2 = parseFloat(s2Text);
-                        const s = Math.sqrt(s1 * s2);  // 几何平均数
-                        sCell.textContent = formatNumber(s);
-
-                        if (s !== 0) {
-                            const rxFinal = rx * (1 + 1/s);
-                            rxFinalCell.textContent = formatNumber(rxFinal);
-                        }
-                    } else {
-                        sCell.textContent = '';
-                        rxFinalCell.textContent = '';
-                    }
-                } else {
-                    rxCell.textContent = '';
-                    sCell.textContent = '';
-                    rxFinalCell.textContent = '';
-                }
-
-                // 每次计算后更新图表
-                updateChart();
-            }
 
             // 重置表格数据函数
             function resetTableData() {
