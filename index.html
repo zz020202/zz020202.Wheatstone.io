@@ -236,12 +236,49 @@
             margin: 5px 0;
         }
 
+        .instructions-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
         .instructions {
+            flex: 2;
+            min-width: 300px;
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
             border: 1px solid #bbdefb;
+        }
+
+        .qr-code-container {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid #bbdefb;
+            text-align: center;
+        }
+
+        .qr-code-placeholder {
+            margin-top: 15px;
+        }
+
+        .qr-code-placeholder img {
+            width: 300px;
+            height: 300px;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+        }
+
+        .qr-code-placeholder p {
+            color: #1565c0;
+            font-size: 0.9rem;
+            margin-top: 10px;
         }
 
         .instructions h3 {
@@ -325,7 +362,7 @@
                             <th class="global-r0" rowspan="2">设置全局R₀<br><input type="number" id="global-r1" step="any" placeholder=""></th>
                             <th colspan="7">换臂前</th>
                             <th colspan="7">换臂后</th>
-                            <th colspan="3">计算结果</th>
+                            <th colspan="2">计算结果</th>
                         </tr>
                         <tr>
                             <!-- 换臂前 -->
@@ -348,7 +385,6 @@
 
                             <!-- 计算结果 -->
                             <th>Rₓ/Ω</th>
-                            <th>𝑆</th>
                             <th>Rₓ=Rₓ±ΔRₓ/Ω</th>
                         </tr>
                     </thead>
@@ -376,7 +412,6 @@
 
                             <!-- 计算结果 -->
                             <td class="result-cell rx"></td>
-                            <td class="result-cell s"></td>
                             <td class="result-cell rx-final"></td>
                         </tr>
 
@@ -403,7 +438,6 @@
 
                             <!-- 计算结果 -->
                             <td class="result-cell rx"></td>
-                            <td class="result-cell s"></td>
                             <td class="result-cell rx-final"></td>
                         </tr>
 
@@ -430,7 +464,6 @@
 
                             <!-- 计算结果 -->
                             <td class="result-cell rx"></td>
-                            <td class="result-cell s"></td>
                             <td class="result-cell rx-final"></td>
                         </tr>
 
@@ -457,7 +490,6 @@
 
                             <!-- 计算结果 -->
                             <td class="result-cell rx"></td>
-                            <td class="result-cell s"></td>
                             <td class="result-cell rx-final"></td>
                         </tr>
 
@@ -484,7 +516,6 @@
 
                             <!-- 计算结果 -->
                             <td class="result-cell rx"></td>
-                            <td class="result-cell s"></td>
                             <td class="result-cell rx-final"></td>
                         </tr>
                     </tbody>
@@ -498,7 +529,7 @@
 
         <div class="visualization-container">
             <div class="visualization">
-                <h2 class="card-title"><i class="fas fa-chart-line"></i> S灵敏度可视化</h2>
+                <h2 class="card-title"><i class="fas fa-chart-line"></i> S₁灵敏度可视化</h2>
                 <div class="chart-container">
                     <canvas id="sensitivityChart"></canvas>
                 </div>
@@ -509,28 +540,32 @@
                 <p class="formula">𝑆₁ = n' / (ΔR₃' / R₃')</p>
                 <p class="formula">𝑆₂ = n'' / (ΔR₃'' / R₃'')</p>
                 <p class="formula">Rₓ = √(R₃ × R₃')</p>
-                <p class="formula">𝑆 = √(𝑆₁ × 𝑆₂)</p>
-                <p class="formula">ΔRₓ' = (0.2/𝑆)/Rₓ×0.01</p>
-                <p class="formula">E_R = √[E_R(前) × E_R(后)]</p>
-                <p class="formula">ΔRₓ" = E_R × Rₓ</p>
-                <p class="formula">ΔRₓ = √(ΔRₓ'² + ΔRₓ"²)</p>
                 <p class="formula">Rₓ=Rₓ±ΔRₓ/Ω</p>
             </div>
         </div>
 
-        <div class="instructions">
-            <h3><i class="fas fa-info-circle"></i> 使用说明</h3>
-            <ol>
-                <li>在"测量条件"部分输入实验的基本参数</li>
-                <li>在"设置全局R₀"列输入全局R₀值，将自动填充到各行的R₁列</li>
-                <li>在表格中输入换臂前后的测量数据</li>
-                <li>计算结果将自动显示在右侧列中</li>
-                <li>换臂前后的桥臂比自动设置为倒数关系</li>
-                <li>S值采用几何平均数计算：𝑆 = √(𝑆₁ × 𝑆₂)</li>
-                <li>ΔRₓ综合了检流计(Δn=0.2)和电阻箱各档位误差</li>
-                <li>S灵敏度可视化图表将根据输入数据自动更新</li>
-                <li>点击"重置表格数据"按钮可以清空所有输入数据</li>
-            </ol>
+        <div class="instructions-container">
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> 使用说明</h3>
+                <ol>
+                    <li>在"测量条件"部分输入实验的基本参数</li>
+                    <li>在"设置全局R₀"列输入全局R₀值，将自动填充到各行的R₁列</li>
+                    <li>在表格中输入换臂前后的测量数据</li>
+                    <li>计算结果将自动显示在右侧列中</li>
+                    <li>换臂前后的桥臂比自动设置为倒数关系</li>
+                    <li>ΔRₓ综合了检流计(Δn=0.2)和电阻箱各档位误差</li>
+                    <li>S₁灵敏度可视化图表将根据输入数据自动更新</li>
+                    <li>点击"重置表格数据"按钮可以清空所有输入数据</li>
+                </ol>
+            </div>
+            <div class="qr-code-container">
+                <h3><i class="fas fa-qrcode"></i> 扫码上传实验结果</h3>
+                <div class="qr-code-placeholder">
+                    <!-- 这里可以放置实际的二维码图片或生成二维码 -->
+                    <img src="my-qrcode.png" alt="二维码">
+                    <p>请使用微信扫描二维码</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -543,7 +578,7 @@
                 data: {
                     labels: [],
                     datasets: [{
-                        label: '𝑆灵敏度 (格/1%)',
+                        label: '𝑆₁灵敏度 (格/1%)',
                         data: [],
                         backgroundColor: 'rgba(66, 165, 245, 0.2)',
                         borderColor: 'rgba(66, 165, 245, 1)',
@@ -561,7 +596,7 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: '不同桥臂比下的𝑆灵敏度变化',
+                            text: '不同桥臂比下的𝑆₁灵敏度变化',
                             font: {
                                 size: 16,
                                 color: '#1565c0'
@@ -581,7 +616,7 @@
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: '𝑆灵敏度 (格/1%)',
+                                text: '𝑆₁灵敏度 (格/1%)',
                                 color: '#1565c0'
                             },
                             grid: {
@@ -608,24 +643,24 @@
                 }
             });
 
-            // 更新图表函数
+            // 更新图表函数 - 修改为基于S₁
             function updateChart() {
                 const rows = document.querySelectorAll('#measurement-table tbody tr');
                 const labels = [];
-                const sValues = [];
+                const s1Values = [];
 
                 rows.forEach(row => {
                     const ratioCell = row.querySelector('.ratio-cell');
-                    const sCell = row.querySelector('.s');
+                    const s1Cell = row.querySelector('.s1');
 
-                    if (ratioCell && sCell && sCell.textContent) {
+                    if (ratioCell && s1Cell && s1Cell.textContent) {
                         labels.push(ratioCell.textContent.trim());
-                        sValues.push(parseFloat(sCell.textContent));
+                        s1Values.push(parseFloat(s1Cell.textContent));
                     }
                 });
 
                 sensitivityChart.data.labels = labels;
-                sensitivityChart.data.datasets[0].data = sValues;
+                sensitivityChart.data.datasets[0].data = s1Values;
                 sensitivityChart.update();
             }
 
@@ -674,7 +709,6 @@
                 const s1Cell = row.querySelector('.s1');
                 const s2Cell = row.querySelector('.s2');
                 const rxCell = row.querySelector('.rx');
-                const sCell = row.querySelector('.s');
                 const rxFinalCell = row.querySelector('.rx-final');
 
                 // 计算𝑆₁
@@ -703,7 +737,6 @@
                     
                     if (s1 && s2) {
                         const s = parseFloat(Math.sqrt(s1 * s2).toFixed(8));
-                        sCell.textContent = formatNumber(s);
                         
                         if (s1 !== 0 && s2 !== 0 && rx) {
                             // 1. 计算ΔRₓ' = (0.2/𝑆)/Rₓ*0.01
@@ -844,7 +877,7 @@
                     input.value = '';
                 });
 
-                const resultCells = document.querySelectorAll('.s1, .s2, .rx, .s, .rx-final');
+                const resultCells = document.querySelectorAll('.s1, .s2, .rx, .rx-final');
                 resultCells.forEach(cell => {
                     cell.textContent = '';
                 });
