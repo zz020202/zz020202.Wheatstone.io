@@ -534,13 +534,15 @@
                     <canvas id="sensitivityChart"></canvas>
                 </div>
             </div>
-
-            <div class="formula-box">
-                <h3>计算公式</h3>
-                <p class="formula">𝑆₁ = n' / (ΔR₃' / R₃')</p>
-                <p class="formula">𝑆₂ = n'' / (ΔR₃'' / R₃'')</p>
-                <p class="formula">Rₓ = √(R₃ × R₃')</p>
-                <p class="formula">Rₓ=Rₓ±ΔRₓ/Ω</p>
+            
+            <!-- 将二维码模块移到公式模块前面 -->
+            <div class="qr-code-container">
+                <h3><i class="fas fa-qrcode"></i> 扫码上传实验结果</h3>
+                <div class="qr-code-placeholder">
+                    <!-- 这里可以放置实际的二维码图片或生成二维码 -->
+                    <img src="my-qrcode.png" alt="二维码">
+                    <p>请使用微信扫描二维码</p>
+                </div>
             </div>
         </div>
 
@@ -558,13 +560,13 @@
                     <li>点击"重置表格数据"按钮可以清空所有输入数据</li>
                 </ol>
             </div>
-            <div class="qr-code-container">
-                <h3><i class="fas fa-qrcode"></i> 扫码上传实验结果</h3>
-                <div class="qr-code-placeholder">
-                    <!-- 这里可以放置实际的二维码图片或生成二维码 -->
-                    <img src="my-qrcode.png" alt="二维码">
-                    <p>请使用微信扫描二维码</p>
-                </div>
+            <!-- 将公式模块移到使用说明右侧 -->
+            <div class="formula-box">
+                <h3>计算公式</h3>
+                <p class="formula">𝑆₁ = n' / (ΔR₃' / R₃')</p>
+                <p class="formula">𝑆₂ = n'' / (ΔR₃'' / R₃'')</p>
+                <p class="formula">Rₓ = √(R₃ × R₃')</p>
+                <p class="formula">Rₓ=Rₓ±ΔRₓ/Ω</p>
             </div>
         </div>
     </div>
